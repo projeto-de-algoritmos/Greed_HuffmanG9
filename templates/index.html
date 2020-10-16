@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"
+    integrity="sha512-XHDcSyqhOoO2ocB7sKOCJEkUjw/pQCJViP1ynpy+EGh/LggzrP6U/V3a++LQTnZT7sCQKeHRyWHfhN2afjXjCg=="
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-network.min.css"
+    integrity="sha512-NJXM8vzWgDcBy9SCUTJXYnNO43sZV3pfLWWZMFTuCtEUIOcznk+AMpH6N3XruxavYfMeMmjrzDMEQ6psRh/6Hw=="
+    crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css"
+    integrity="sha512-8OVtKyemDe8Koi/74dnSJughhkwnzqq217zUtUumyvx0Z0kF6H0YYFobH2kEYjKMNq2xNQyN64dnleqecTSL0A=="
+    crossorigin="anonymous" />
+</head>
+
+<body>
+  <div class="content">
+    <input type="text" id="start" placeholder="Origem" />
+    <input type="text" id="goal" placeholder="Destino" />
+    <button onclick="solve()">Buscar caminho</button>
+    <button onclick="createTree()">Gerar novo Grafo</button>
+    <p id="msg"></p>
+
+    <div id="mynetwork"></div>
+  </div>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
+      integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+  <script type="text/javascript" charset="utf-8">
+    let socket = io();
+    socket.on('update', function (data) {
+      createTree(data);
+    });
+  </script>
+
+  <script>
+    var nodes = []
+    var edges = []
+    var object = [
+    ]
+    var languages = [];
+    var network = {};
+    var vis_edges = {};
+    var vis_nodes = {};
+
+    // window.onload = function () {
+    //   createTree()
+    // }
+
+
+    function solve() {
+      socket.emit('solve', { word: 'universidade'});
+    }
+
+    function createTree(data) {
+      edges = [];
+
+      console.log(data);
+
+      nodes = [
+        
+      ];
+
+      for (let i = 0; i < data.nodes.length; i++) {
+        nodes.push({
+          id: data.nodes[i].letter,
+          label: `${data.nodes[i].letter} ${data.nodes[i].frequency}`,
+        })
+      }
+
+      
+
+      vis_nodes = new vis.DataSet(nodes);
+      vis_edges = new vis.DataSet(edges);
+
+
+
+      var container = document.getElementById('mynetwork');
+      var data = {
+        nodes: vis_nodes,
+        edges: vis_edges
+      };
+
+      var options = {
+        height: "600px",
+        clickToUse: false,
+        interaction: { zoomView: false },
+        layout: {
+          hierarchical: {
+            direction: "UD",
+            sortMethod: "directed",
+            nodeSpacing: 250,
+            levelSeparation: 300
+          }
+        },
+        interaction: { dragNodes: false },
+        physics: {
+          enabled: false
+        }
+      };
+      network = new vis.Network(container, data, options);
+    }
+
+    function updateTree(distances) {
+
+    }
+  </script>
+
+</body>
+
+</html>
+<style>
+  #msg {
+    font-family: Sans-serif;
+    color: red;
+    margin-top: -6px;
+    font-size: 13px;
+  }
+
+  .content {
+    width: 80%;
+    margin: auto;
+  }
+
+  button {
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 38px;
+    color: white;
+    padding: 9px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+  }
+
+  h2,
+  p {
+    font-family: Sans-serif;
+  }
+</style>

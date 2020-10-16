@@ -1,8 +1,5 @@
 # Huffman Coding in python
 
-string = 'Universidade de Brasília'
-
-
 # Creating tree nodes
 class NodeTree(object):
 
@@ -16,8 +13,11 @@ class NodeTree(object):
     def nodes(self):
         return (self.left, self.right)
 
-    def __str__(self):
-        return '%s_%s' % (self.left, self.right)
+    def __str__(self, level=0):
+        ret = "\t"*level+repr(self.value)+"\n"
+        for child in self.children():
+            ret += child.__str__(level+1)
+        return ret
 
 
 # Main function implementing huffman coding
@@ -31,30 +31,46 @@ def huffman_code_tree(node, left=True, binString=''):
     return d
 
 
-# Calculating frequency
-freq = {}
-for c in string:
-    if c in freq:
-        freq[c] += 1
-    else:
-        freq[c] = 1
+def get_frequencies(string):
+    freq = {}
+    for c in string:
+        if c in freq:
+            freq[c] += 1
+        else:
+            freq[c] = 1
 
-freq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+    freq = sorted(freq.items(), key=lambda x: x[1], reverse=True)
 
-nodes = freq
+    return freq
 
-while len(nodes) > 1:
-    (key1, c1) = nodes[-1]
-    (key2, c2) = nodes[-2]
-    nodes = nodes[:-2]
-    node = NodeTree(key1, key2)
-    nodes.append((node, c1 + c2))
 
-    nodes = sorted(nodes, key=lambda x: x[1], reverse=True)
+def encode(nodes):
+    while len(nodes) > 1:
+        (key1, c1) = nodes[-1]
+        (key2, c2) = nodes[-2]
+        nodes = nodes[:-2]
+        node = NodeTree(key1, key2)
+        nodes.append((node, c1 + c2))
 
-huffmanCode = huffman_code_tree(nodes[0][0])
+        nodes = sorted(nodes, key=lambda x: x[1], reverse=True)
 
-print(' Char | Huffman code ')
-print('----------------------')
-for (char, frequency) in freq:
-    print(' %-4r |%12s' % (char, huffmanCode[char]))
+    return nodes
+
+def solve(string, socketio):
+    frequencies = get_frequencies(string)
+
+    emit_data = []
+    for frequency in frequencies:
+        emit_data.append({
+            'letter': frequency[0],
+            'frequency': frequency[1],
+        })
+    socketio.emit('update', {'nodes': emit_data})
+
+    nodes = encode(frequencies)
+    huffmanCode = huffman_code_tree(nodes[0][0])
+
+    print(' Char | Huffman code ')
+    print('----------------------')
+    for (char, frequency) in freq:
+        print(' %-4r |%12s' % (char, huffmanCode[char]))
