@@ -31,7 +31,8 @@
   <script type="text/javascript" charset="utf-8">
     let socket = io();
     socket.on('update', function (data) {
-      createTree(data);
+      console.log(data);
+      // createTree(data);
     });
   </script>
 
