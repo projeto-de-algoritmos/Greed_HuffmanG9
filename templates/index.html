@@ -18,23 +18,14 @@
 
 <body>
   <div class="content">
-    <input type="text" id="start" placeholder="Origem" />
-    <input type="text" id="goal" placeholder="Destino" />
-    <button onclick="solve()">Buscar caminho</button>
-    <button onclick="createTree()">Gerar novo Grafo</button>
+    <input type="text" id="start" placeholder="Frase" />
+    <button onclick="solve()">Codificar</button>
     <p id="msg"></p>
 
     <div id="mynetwork"></div>
+    <div id="div-table"></div>
   </div>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
-    integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-  <script type="text/javascript" charset="utf-8">
-    let socket = io();
-    socket.on('frequencies', function (data) {
-      console.log([...data.frequencies])
-      createTree(data.frequencies);
-    });
-  </script>
+
 
   <script>
     var nodes = []
@@ -46,27 +37,58 @@
     var vis_edges = {};
     var vis_nodes = {};
 
-    // window.onload = function () {
-    //   createTree()
-    // }
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     function solve() {
-      socket.emit('solve', { word: 'universidade' });
+      const word = document.getElementById('start').value;
+      const frequencies = getFrequencies(word);
+      createTree(frequencies)
+    }
+
+    function getFrequencies(string) {
+      let freq = {}
+
+      for (let c of string) {
+        console.log(c)
+        if (c in freq) {
+          freq[c] += 1
+        } else {
+          freq[c] = 1
+        }
+      }
+
+      console.log(freq)
+
+      let items = Object.keys(freq).map((key) => {
+        return [key, freq[key]];
+      })
+
+      items.sort((first, second) => {
+        return second[1] - first[1];
+      })
+
+      console.log(items)
+      return items
     }
 
     async function createTree(frequencies) {
+
+      let codes = {};
+
       edges = [];
 
-      nodes = [
-
-      ];
+      nodes = [];
 
       for (let i = 0; i < frequencies.length; i++) {
+        codes[frequencies[i][0]] = '';
+
         nodes.push({
+          scaling: {
+            min: 20
+          },
           id: frequencies[i][0],
           label: `${frequencies[i][0]} ${frequencies[i][1]}`,
         })
@@ -75,8 +97,6 @@
       vis_nodes = new vis.DataSet(nodes);
       vis_edges = new vis.DataSet(edges);
 
-
-
       var container = document.getElementById('mynetwork');
       var data = {
         nodes: vis_nodes,
@@ -84,7 +104,7 @@
       };
 
       var options = {
-        height: "600px",
+        height: "1200px",
         clickToUse: false,
         interaction: { zoomView: false },
         layout: {
@@ -103,7 +123,7 @@
       network = new vis.Network(container, data, options);
 
 
-      await sleep(2000);
+      await sleep(1);
 
       while (frequencies.length > 1) {
 
@@ -124,14 +144,25 @@
 
         edges.push({
           from: parent_node.id,
-          to: node1[0]
+          to: node1[0],
+          label: '0'
         });
 
         edges.push({
           from: parent_node.id,
-          to: node2[0]
+          to: node2[0],
+          label: '1'
         });
 
+        for (i = 0; i < node1[0].length; i++) {
+          let char = node1[0].charAt(i);
+          codes[char] += '0';
+        }
+
+        for (i = 0; i < node2[0].length; i++) {
+          let char = node2[0].charAt(i);
+          codes[char] += '1';
+        }
 
         let data_nodes = new vis.DataSet(nodes);
         let data_edges = new vis.DataSet(edges);
@@ -144,10 +175,52 @@
           if (a[1] > b[1]) return 1;
           return 0;
         })
-        await sleep(1000);
+        await sleep(1);
       }
+      generateCodesTable(codes);
     }
 
+    function generateCodesTable(codes) {
+      let table = document.getElementsByTagName('table');
+            
+      if(table.length){
+          table[0].parentNode.removeChild(table[0])
+      }
+
+      let keys = Object.keys(codes);
+
+      const body = document.getElementById('div-table');
+      table = document.createElement('table');
+      const tbody = document.createElement('tbody');
+
+      const headerRow = document.createElement('tr');
+      const headerLetter = document.createElement('th');
+      headerLetter.innerHTML = "Letra";
+
+      const headerCode = document.createElement('th');
+      headerCode.innerHTML = "Código";
+
+      headerRow.appendChild(headerLetter)
+      headerRow.appendChild(headerCode)
+
+      tbody.appendChild(headerRow)
+
+      for (let i = 0; i < keys.length; i++) {
+        const tr = document.createElement('tr');
+        const letterTd = document.createElement('td');
+
+        letterTd.innerHTML = keys[i];
+
+        const codeTd = document.createElement('td');
+        codeTd.innerHTML = codes[keys[i]];
+
+        tr.appendChild(letterTd);
+        tr.appendChild(codeTd);
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      body.appendChild(table);
+    }
   </script>
 
 </body>
@@ -159,6 +232,10 @@
     color: red;
     margin-top: -6px;
     font-size: 13px;
+  }
+
+  table {
+    border: 1px solid black;
   }
 
   .content {
