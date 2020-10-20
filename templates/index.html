@@ -27,12 +27,12 @@
     <div id="mynetwork"></div>
   </div>
   <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
-      integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
   <script type="text/javascript" charset="utf-8">
     let socket = io();
-    socket.on('update', function (data) {
-      console.log(data);
-      // createTree(data);
+    socket.on('frequencies', function (data) {
+      console.log([...data.frequencies])
+      createTree(data.frequencies);
     });
   </script>
 
@@ -50,28 +50,27 @@
     //   createTree()
     // }
 
-
-    function solve() {
-      socket.emit('solve', { word: 'universidade'});
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    function createTree(data) {
+    function solve() {
+      socket.emit('solve', { word: 'universidade' });
+    }
+
+    async function createTree(frequencies) {
       edges = [];
 
-      console.log(data);
-
       nodes = [
-        
+
       ];
 
-      for (let i = 0; i < data.nodes.length; i++) {
+      for (let i = 0; i < frequencies.length; i++) {
         nodes.push({
-          id: data.nodes[i].letter,
-          label: `${data.nodes[i].letter} ${data.nodes[i].frequency}`,
+          id: frequencies[i][0],
+          label: `${frequencies[i][0]} ${frequencies[i][1]}`,
         })
       }
-
-      
 
       vis_nodes = new vis.DataSet(nodes);
       vis_edges = new vis.DataSet(edges);
@@ -102,11 +101,53 @@
         }
       };
       network = new vis.Network(container, data, options);
+
+
+      await sleep(2000);
+
+      while (frequencies.length > 1) {
+
+        let node1 = frequencies[0];
+        let node2 = frequencies[1];
+
+        let parent_node = {
+          id: frequencies[0][0] + frequencies[1][0],
+          label: (frequencies[0][1] + frequencies[1][1]).toString()
+        };
+        console.log([...frequencies]);
+
+        frequencies.push([node1[0] + node2[0], node1[1] + node2[1]])
+        nodes.push(parent_node)
+
+        frequencies.splice(0,2);
+
+
+        edges.push({
+          from: parent_node.id,
+          to: node1[0]
+        });
+
+        edges.push({
+          from: parent_node.id,
+          to: node2[0]
+        });
+
+
+        let data_nodes = new vis.DataSet(nodes);
+        let data_edges = new vis.DataSet(edges);
+        
+
+        network.setData({nodes: data_nodes, edges: data_edges});
+        network.redraw();
+        frequencies.sort((a,b) => {
+          if (a[1] < b[1]) return -1;
+          if (a[1] > b[1]) return 1;
+          return 0;
+        })
+        await sleep(1000);
+      }
     }
 
-    function updateTree(distances) {
-
-    }
   </script>
 
 </body>

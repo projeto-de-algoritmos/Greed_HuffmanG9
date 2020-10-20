@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-from huffman import solve
+from huffman import get_frequencies
 
 socketio = SocketIO()
 
@@ -14,7 +14,7 @@ def index():
 
 @socketio.on('solve')
 def handle_solve(string):
-    solve(string['word'], socketio)
+    get_frequencies(string['word'], socketio)
 
 
 if __name__ == '__main__':
