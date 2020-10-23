@@ -19,10 +19,10 @@ Este trabalho é uma representação visual e lógica do passo a passo do algori
 **Linguagem**: HTML/JS<br>
 
 1) Clonar o repositório
-2) Abrir o arquivo HTML que est na pasta templates no browser
+2) Abrir o arquivo HTML que está na pasta templates no browser
 
 ## Uso 
-O usuário deve entrar com uma palavra ou frase que deseja ser codificada. O código irá demonstrar o passo a passo da execução do algoritmo de Huffman, assim como a palavra codificada e uma legenda com o a letra e seu código. 
+O usuário deve entrar com uma palavra ou frase que deseja ser codificada. O código irá demonstrar o passo a passo da execução do algoritmo de Huffman, assim como a palavra codificada e uma legenda com a letra e o seu código. 
 
 
 
